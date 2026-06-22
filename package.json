@@ -1,0 +1,13 @@
+{
+  "name": "aedes",
+  "version": "1.0.0",
+  "author": "The Elysiae Project",
+  "description": "Component and Asset backend for [Elysiae](https://github.com/elysiae-project/elysiae)",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
+    "@types/node": "^26.0.0"
+  },
+  "packageManager": "yarn@4.17.0"
+}
