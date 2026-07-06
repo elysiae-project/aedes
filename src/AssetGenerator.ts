@@ -1,36 +1,25 @@
 import { mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { BrandingData, GraphicsData } from "./types.ts";
+import { BRANDING_URL, GRAPHICS_URL, type BrandingData, type GameAsset, type GraphicsData, type Manifest } from "./types.ts";
 import { updateCache } from "./Util.ts";
 
-const GAMES = ["nap", "hkrpg", "hk4e", "bh3"];
-
-const GRAPHICS_URL =
-	"\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x67\x2d\x68\x79\x70\x2d\x61\x70\x69\x2e\x68\x6f\x79\x6f\x76\x65\x72\x73\x65\x2e\x63\x6f\x6d\x2f\x68\x79\x70\x2f\x68\x79\x70\x2d\x63\x6f\x6e\x6e\x65\x63\x74\x2f\x61\x70\x69\x2f\x67\x65\x74\x41\x6c\x6c\x47\x61\x6d\x65\x42\x61\x73\x69\x63\x49\x6e\x66\x6f\x3f\x6c\x61\x75\x6e\x63\x68\x65\x72\x5f\x69\x64\x3d\x56\x59\x54\x70\x58\x6c\x62\x57\x6f\x38\x26\x6c\x61\x6e\x67\x75\x61\x67\x65\x3d\x65\x6e";
-const BRANDING_URL =
-	"\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x67\x2d\x68\x79\x70\x2d\x61\x70\x69\x2e\x68\x6f\x79\x6f\x76\x65\x72\x73\x65\x2e\x63\x6f\x6d\x2f\x68\x79\x70\x2f\x68\x79\x70\x2d\x63\x6f\x6e\x6e\x65\x63\x74\x2f\x61\x70\x69\x2f\x67\x65\x74\x47\x61\x6d\x65\x73\x3f\x6c\x61\x75\x6e\x63\x68\x65\x72\x5f\x69\x64\x3d\x56\x59\x54\x70\x58\x6c\x62\x57\x6f\x38";
-
-const generateAssets = async () => {
+/**
+ * Downloads and optimizes launcher asset data. Files are renamed to their hash before any optimizations are applied
+ */
+const generateAssets = async (): Promise<void> => {
 	["overlay", "bg", "icon"].forEach((item) => {
 		const path = join("assets", item);
-		mkdirSync(path, {
-			recursive: true,
-		});
-		GAMES.forEach((g) => {
-			const gamePath = join(path, g);
-			mkdirSync(gamePath, {
-				recursive: true,
-			});
+		mkdirSync(path, { recursive: true });
+		["nap", "hkrpg", "hk4e", "bh3"].forEach((g) => {
+			mkdirSync(join(path, g), { recursive: true });
 		});
 	});
 
-	const graphicsData = (await (
-		await fetch(GRAPHICS_URL)
-	).json()) as GraphicsData;
+	const graphicsData = (await (await fetch(GRAPHICS_URL)).json()) as GraphicsData;
+	const brandingData = (await (await fetch(BRANDING_URL)).json()) as BrandingData;
 
-	const brandingData = (await (
-		await fetch(BRANDING_URL)
-	).json()) as BrandingData;
+	const manifest: Manifest = {};
 
 	await Promise.all(
 		["nap", "hkrpg", "hk4e", "bh3"].map(async (game, index) => {
@@ -47,28 +36,51 @@ const generateAssets = async () => {
 				throw new Error();
 			}
 
-			console.log(`Downloading all existing image, video, and overlay data for ${game}`)
+			const backgrounds: GameAsset[] = [];
+
+			console.log(`Downloading/Optimising backgrounds for ${game}`);
+			let overlayPath = "";
 			await Promise.all(
-				gameGraphics?.backgrounds.map(async (background, index) => {
+				gameGraphics.backgrounds.map(async (background) => {
 					const imageUrl = background.background.url;
 					const videoUrl = background.video.url;
 					const overlayUrl = background.theme.url;
 
-					await updateCache(join("assets", "bg", game, index.toString()), [imageUrl, videoUrl]);
-					await updateCache(join("assets", "overlay", game), [overlayUrl]);
+
+					const urls = [imageUrl];
+					if (videoUrl) urls.push(videoUrl);
+					const [imagePath, videoPath] = await updateCache(
+						join("assets", "bg", game),
+						urls,
+					);
+
+					const currentOverlayPath = (await updateCache(join("assets", "overlay", game), [overlayUrl]))[0];
+					if(currentOverlayPath) overlayPath = currentOverlayPath;
+
+					backgrounds.push({
+						image: imagePath as string | null,
+						video: videoPath ?? null,
+					});
 				}),
 			);
 
 			console.log(`Downloading icon for ${game}`);
 			const iconUrl = gameBranding.display.icon.url;
-			await updateCache(join("assets", "icon", game), [iconUrl]);
+			const [iconPath] = await updateCache(join("assets", "icon", game), [iconUrl]);
+
+			manifest[game] = { backgrounds, icon: iconPath as string | null, overlay: overlayPath as string };
 		}),
 	);
+
+	await writeFile(join("assets", "assetData.json"), JSON.stringify(manifest, null, 2));
 };
 
-const generateComponentData = async() => {
+/**
+ * Updates information on the most up-to-date versions of components that Elysiae relies on for games to run
+ */
+const generateComponentData = async () => {
 
-}
+};
 
 (async () => {
 	await generateAssets();

@@ -1,6 +1,7 @@
 import { exec } from "node:child_process";
 import { createHash } from "node:crypto";
-import { createReadStream, createWriteStream, unlinkSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { createReadStream, createWriteStream, rename, unlinkSync } from "node:fs";
 import { get } from "node:https";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -8,24 +9,36 @@ import { FFMPEG_FILTERS } from "./types.ts";
 
 const execAsync = promisify(exec);
 
-export const updateCache = async (destPath: string, downloadUrls: string[]) => {
-	await Promise.all(
+export const updateCache = async (destPath: string, downloadUrls: string[]): Promise<(string | null)[]> => {
+	return Promise.all(
 		downloadUrls.map(async (url) => {
 			if (isURL(url)) {
 				const ext = getExtensionFromURL(url);
-				const filters = FFMPEG_FILTERS[ext as "webm" | "webp"];
-				const tempFile = join(destPath, `temp.${ext}`);
+				const outputExt = ext === "webm" ? "mp4" : ext;
+				const id = randomUUID();
+				const tempSource = join(destPath, `temp-download-${id}.${ext}`);
 
-				await downloadFile(url, tempFile);
-				const finalPath = join(
-					destPath,
-					`${await computeFileHash(tempFile)}.${ext}`,
-				);
+				await downloadFile(url, tempSource);
+				const fileHash = await computeFileHash(tempSource);
+				const finalPath = join(destPath, `${fileHash}.${outputExt}`);
 
-				await ffmpegCommand(tempFile, filters, finalPath);
-				unlinkSync(tempFile);
+				if (ext === "webm" || ext === "webp") {
+					try {
+						await ffmpegCommand(tempSource, ext, finalPath);
+					} finally {
+						try { unlinkSync(tempSource); } catch {}
+					}
+				} else {
+					try {
+						await renameFile(tempSource, finalPath);
+					} finally {
+						try { unlinkSync(tempSource); } catch {}
+					}
+				}
+
+				return finalPath;
 			} else {
-				console.warn(`${url} is NOT a valid url; skipping file...`);
+				return null;
 			}
 		}),
 	);
@@ -57,20 +70,24 @@ const downloadFile = async (url: string, dest: string): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		const file = createWriteStream(dest);
 		get(url, (response) => {
+			if (response.statusCode !== 200) {
+				file.close(() => reject(new Error(`HTTP ${response.statusCode} for ${url}`)));
+				return;
+			}
+
 			response.pipe(file);
 
 			file.on("finish", () => {
 				file.close((e) => {
-					if(e) reject(e);
+					if (e) reject(e);
 					else resolve();
 				});
-			})
+			});
 
 			file.on("error", (e) => reject(e));
 			response.on("error", (e) => reject(e));
-		
-		})
-	})
+		});
+	});
 };
 
 const computeFileHash = async (path: string): Promise<string> => {
@@ -84,14 +101,22 @@ const computeFileHash = async (path: string): Promise<string> => {
 	});
 };
 
+const renameFile = async (src: string, dest: string): Promise<void> => {
+	return new Promise((resolve, reject) => {
+		rename(src, dest, (e) => {
+			if (e) reject(e);
+			else resolve();
+		});
+	});
+};
+
 const ffmpegCommand = async (
 	input: string,
-	filters: string,
+	ext: string,
 	dest: string,
 ): Promise<void> => {
-	return new Promise((resolve, reject) => {
-		execAsync(`ffmpeg -y -i "${input}" ${filters} ${dest}`)
-			.then(() => resolve)
-			.catch(reject);
-	});
+	const filter = FFMPEG_FILTERS[ext as "webp" | "webm"];
+	return execAsync(`ffmpeg -y -i "${input}" ${filter} ${dest}`).then(
+		() => {},
+	);
 };
