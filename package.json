@@ -5,9 +5,17 @@
   "description": "Component and Asset backend for [Elysiae](https://github.com/elysiae-project/elysiae)",
   "license": "BSD-3-Clause",
   "type": "module",
-  "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
-    "@types/node": "^26.0.0"
+  "scripts": {
+    "generate": "node src/AssetGenerator.ts"
   },
-  "packageManager": "yarn@4.17.0"
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
+    "@types/follow-redirects": "^1.14.4",
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3"
+  },
+  "packageManager": "yarn@4.17.0",
+  "dependencies": {
+    "follow-redirects": "^1.16.0"
+  }
 }
