@@ -1,7 +1,14 @@
 import { mkdirSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { BRANDING_URL, GRAPHICS_URL, type BrandingData, type GameAsset, type GraphicsData, type Manifest } from "./types.ts";
+import {
+	BRANDING_URL,
+	type BrandingData,
+	type GameAsset,
+	GRAPHICS_URL,
+	type GraphicsData,
+	type Manifest,
+} from "./types.ts";
 import { updateCache } from "./Util.ts";
 
 /**
@@ -16,8 +23,12 @@ const generateAssets = async (): Promise<void> => {
 		});
 	});
 
-	const graphicsData = (await (await fetch(GRAPHICS_URL)).json()) as GraphicsData;
-	const brandingData = (await (await fetch(BRANDING_URL)).json()) as BrandingData;
+	const graphicsData = (await (
+		await fetch(GRAPHICS_URL)
+	).json()) as GraphicsData;
+	const brandingData = (await (
+		await fetch(BRANDING_URL)
+	).json()) as BrandingData;
 
 	const manifest: Manifest = {};
 
@@ -46,7 +57,6 @@ const generateAssets = async (): Promise<void> => {
 					const videoUrl = background.video.url;
 					const overlayUrl = background.theme.url;
 
-
 					const urls = [imageUrl];
 					if (videoUrl) urls.push(videoUrl);
 					const [imagePath, videoPath] = await updateCache(
@@ -54,8 +64,10 @@ const generateAssets = async (): Promise<void> => {
 						urls,
 					);
 
-					const currentOverlayPath = (await updateCache(join("assets", "overlay", game), [overlayUrl]))[0];
-					if(currentOverlayPath) overlayPath = currentOverlayPath;
+					const currentOverlayPath = (
+						await updateCache(join("assets", "overlay", game), [overlayUrl])
+					)[0];
+					if (currentOverlayPath) overlayPath = currentOverlayPath;
 
 					backgrounds.push({
 						image: imagePath as string | null,
@@ -66,21 +78,28 @@ const generateAssets = async (): Promise<void> => {
 
 			console.log(`Downloading icon for ${game}`);
 			const iconUrl = gameBranding.display.icon.url;
-			const [iconPath] = await updateCache(join("assets", "icon", game), [iconUrl]);
+			const [iconPath] = await updateCache(join("assets", "icon", game), [
+				iconUrl,
+			]);
 
-			manifest[game] = { backgrounds, icon: iconPath as string | null, overlay: overlayPath as string };
+			manifest[game] = {
+				backgrounds,
+				icon: iconPath as string | null,
+				overlay: overlayPath as string,
+			};
 		}),
 	);
 
-	await writeFile(join("assets", "assetData.json"), JSON.stringify(manifest, null, 2));
+	await writeFile(
+		join("assets", "assetData.json"),
+		JSON.stringify(manifest, null, 2),
+	);
 };
 
 /**
  * Updates information on the most up-to-date versions of components that Elysiae relies on for games to run
  */
-const generateComponentData = async () => {
-
-};
+const generateComponentData = async () => {};
 
 (async () => {
 	await generateAssets();
