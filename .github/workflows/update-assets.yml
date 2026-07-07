@@ -69,8 +69,8 @@ jobs:
             - name: Prepare for Deploy
               run: |
                 mkdir -pv endpoint
-                cp assets endpoint/assets
-                cp components endpoint/components
+                cp -rv assets endpoint/assets
+                cp -rv components endpoint/components
 
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v3
