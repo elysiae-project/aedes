@@ -6,7 +6,8 @@
   "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {
-    "generate": "node src/AssetGenerator.ts"
+    "generate": "node src/AssetGenerator.ts",
+    "format": "biome format"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
@@ -14,8 +15,5 @@
     "@types/node": "^26.1.0",
     "typescript": "^6.0.3"
   },
-  "packageManager": "yarn@4.17.0",
-  "dependencies": {
-    "follow-redirects": "^1.16.0"
-  }
+  "packageManager": "yarn@4.17.0"
 }
