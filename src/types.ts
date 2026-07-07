@@ -111,17 +111,90 @@ export type BrandingData = {
 	};
 };
 
-export const FFMPEG_FILTERS: Record<"webp" | "webm", string> = {
-	webm: "-c:v libx264 -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -tune animation -preset fast -movflags +faststart -c:a copy",
-	webp: "-lossless 1 -compression_level 6",
+export type GithubApiResponse = {
+	url: string;
+	assets_url: string;
+	html_url: string;
+	id: number;
+	author: GithubUserData;
+	node_id: string;
+	tag_name: string;
+	target_commitish: string;
+	name: string;
+	draft: boolean;
+	immutable: boolean;
+	prerelease: boolean;
+	created_at: string;
+	updated_at: string;
+	published_at: string;
+	assets: {
+		url: string;
+		id: string;
+		node_id: string;
+		name: string;
+		label: string | null; // best guess
+		uploader: GithubUserData;
+		content_type: string;
+		state: string;
+		size: number;
+		digest: string;
+		download_count: number;
+		created_at: string;
+		updated_at: string;
+		browser_download_url: string;
+	}[];
+	tarball_url: string;
+	zipball_url: string;
+	body: string;
+	reactions: any;
 };
+
+type GithubUserData = {
+	login: string;
+	id: number;
+	avatar_url: string;
+	gravatar_id: string;
+	url: string;
+	html_url: string;
+	followers_url: string;
+	following_url: string;
+	gists_url: string;
+	starred_url: string;
+	subscriptions_url: string;
+	organizations_url: string;
+	repos_url: string;
+	events_url: string;
+	recieved_events_url: string;
+	type: string;
+	user_view_type: string;
+	site_admin: boolean;
+};
+
+export type ComponentTracker = {
+	saveTo: string;
+	repo: string;
+}[];
 
 export type GameAsset = {
 	image: string | null;
 	video: string | null;
 };
 
-export type Manifest = Record<string, { backgrounds: GameAsset[]; overlay: string | null, icon: string | null }>;
+export type Manifest = Record<
+	string,
+	{ backgrounds: GameAsset[]; overlay: string | null; icon: string | null }
+>;
+
+export type ComponentData = {
+	tag: string;
+	download_url: string;
+	hash: string;
+};
+
+export const FFMPEG_FILTERS: Record<"webp" | "webm", string> = {
+	webm: "-c:v libx264 -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -tune animation -preset fast -movflags +faststart -c:a copy",
+	webp: "-lossless 1 -compression_level 6",
+};
 
 export const GRAPHICS_URL =
 	"\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x67\x2d\x68\x79\x70\x2d\x61\x70\x69\x2e\x68\x6f\x79\x6f\x76\x65\x72\x73\x65\x2e\x63\x6f\x6d\x2f\x68\x79\x70\x2f\x68\x79\x70\x2d\x63\x6f\x6e\x6e\x65\x63\x74\x2f\x61\x70\x69\x2f\x67\x65\x74\x41\x6c\x6c\x47\x61\x6d\x65\x42\x61\x73\x69\x63\x49\x6e\x66\x6f\x3f\x6c\x61\x75\x6e\x63\x68\x65\x72\x5f\x69\x64\x3d\x56\x59\x54\x70\x58\x6c\x62\x57\x6f\x38\x26\x6c\x61\x6e\x67\x75\x61\x67\x65\x3d\x65\x6e";

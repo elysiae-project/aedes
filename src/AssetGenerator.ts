@@ -1,15 +1,21 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
 	BRANDING_URL,
 	type BrandingData,
+	type ComponentTracker,
 	type GameAsset,
 	GRAPHICS_URL,
 	type GraphicsData,
 	type Manifest,
 } from "./types.ts";
-import { updateCache } from "./Util.ts";
+import {
+	findGithubArchiveIndex,
+	githubApiFetch,
+	updateCache,
+	updateComponentJson,
+} from "./Util.ts";
 
 /**
  * Downloads and optimizes launcher asset data. Files are renamed to their hash before any optimizations are applied
@@ -99,9 +105,53 @@ const generateAssets = async (): Promise<void> => {
 /**
  * Updates information on the most up-to-date versions of components that Elysiae relies on for games to run
  */
-const generateComponentData = async () => {};
+const generateComponentData = async () => {
+	const trackedAssets: ComponentTracker = [
+		{
+			saveTo: "proton.json",
+			repo: "GloriousEggroll/proton-ge-custom",
+		},
+	];
+
+	await Promise.all(
+		trackedAssets.map(async (asset) => {
+			const savePath = join("components", asset.saveTo);
+			const response = await githubApiFetch(asset.repo);
+
+			const archiveIndex = findGithubArchiveIndex(response);
+			if (archiveIndex === -1) {
+				console.error(
+					`ERROR: Repo ${asset.repo} does NOT have any valid download links`,
+				);
+				return;
+			}
+
+			updateComponentJson(
+				response.tag_name,
+				response.assets[archiveIndex]?.browser_download_url as string,
+				response.assets[archiveIndex]?.digest.split("sha256:")[1] as string,
+				savePath,
+			);
+		}),
+	);
+
+	writeJadteieFile();
+};
+
+// Jadeite is deprecated so the contents of this file will be the same. Once jadeite is no longer needed (only one game still needs it), this function will be removed
+const writeJadteieFile = () => {
+	const jaditeData = `
+	[
+  		{
+    		"tag": "v5.0.1",
+    		"download_url": "https://codeberg.org/mkrsym1/jadeite/releases/download/v5.0.1/v5.0.1.zip",
+    		"hash": "95986915debe66d6308ae81ead28c362eff79624f806da22a88b9073259d703a"
+  		}
+	]`;
+
+	writeFileSync(join("components", "jadeite.json"), jaditeData);
+};
 
 (async () => {
-	await generateAssets();
-	await generateComponentData();
+	await Promise.all([generateAssets(), generateComponentData()]);
 })();
