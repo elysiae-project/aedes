@@ -90,17 +90,21 @@ export const githubApiFetch = async (
 };
 
 /**
- * Finds the first gz/zstd/xz file in a GitHub api release data response
+ * Finds the archive asset index, skipping aarch64/arm64 builds
  * @param apiResponse GitHub API release data response
- * @returns index to the first gz/zstd/xz file
+ * @returns index to the preferred archive file
  */
 export const findGithubArchiveIndex = (
 	apiResponse: GithubApiResponse,
 ): number => {
 	for (let i = 0; i < apiResponse.assets.length; i++) {
 		const contentType = apiResponse.assets[i]?.content_type ?? null;
+		const name = apiResponse.assets[i]?.name ?? "";
 		if (contentType) {
 			if (["gzip", "zstd", "x-xz"].includes(contentType.split("/")[1] ?? "")) {
+				if (name.includes("aarch") || name.includes("arm")) {
+					continue;
+				}
 				return i;
 			}
 		}
