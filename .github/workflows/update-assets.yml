@@ -5,6 +5,8 @@ on:
         paths:
             - "src/*"
             - ".github/workflows/update-assets.yml"
+        branches:
+            - main
     schedule:
         - cron: "15 8/4 * * *"
 
