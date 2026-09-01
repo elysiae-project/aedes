@@ -140,7 +140,7 @@ export const regenerateComponentData = async () => {};
 /**
  * Optimizes an image/video asset using FFMpeg. Deletes file when optimization is complete
  * @param path path to unoptimized asset
- * @returns path to newly-created optimized asset. This asset will be named after its sha256sum
+ * @returns path to newly-created optimized asset, relative to where it is on the web server. This asset will be named after its sha256sum
  */
 const fetchAndOptimize = async (
   url: string,
@@ -173,7 +173,8 @@ const fetchAndOptimize = async (
 
     renameSync(optimizedPath, finalPath);
 
-    return finalPath;
+    // Temporary fix that will probably remain permanent. Anything in the static/ folder will be placed in /  (rather than /static/) once wrangler starts
+    return finalPath.slice(8);
   } else throw new Error(`url ${url} is invalid`);
 };
 
