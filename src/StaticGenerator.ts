@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   createReadStream,
   createWriteStream,
+  existsSync,
   mkdirSync,
   renameSync,
   unlinkSync,
@@ -45,9 +46,6 @@ export const regenerateAssetData = async () => {
 
         const game = gameData.game.biz.split("_")[0] as Games;
         const destPath = `./static/${game}/${locale}`;
-        mkdirSync(destPath, {
-          recursive: true,
-        });
 
         const backgroundData: LocaleBackgroundAsset[] = await Promise.all(
           gameData.backgrounds.map(
@@ -55,7 +53,7 @@ export const regenerateAssetData = async () => {
               const currentBgData: LocaleBackgroundAsset = {
                 image: await fetchAndOptimize(
                   background.background.url,
-                  destPath,
+                  `${destPath}/image`,
                   "image",
                   crypto.randomUUID(),
                 ),
@@ -63,7 +61,7 @@ export const regenerateAssetData = async () => {
                   background.video.url !== ""
                     ? await fetchAndOptimize(
                         background.video.url,
-                        destPath,
+                        `${destPath}/video`,
                         "video",
                         crypto.randomUUID(),
                       )
@@ -72,7 +70,7 @@ export const regenerateAssetData = async () => {
                   background.theme.url !== ""
                     ? await fetchAndOptimize(
                         background.theme.url,
-                        destPath,
+                        `${destPath}/overlay`,
                         "overlay",
                         crypto.randomUUID(),
                       )
@@ -104,29 +102,29 @@ export const regenerateAssetData = async () => {
       continue;
     }
     const game = gameDataGlb.biz.split("_")[0] as Games;
-    const destPath = `./static/${game}`;
+    const iconDest = `./static/${game}/icon`;
 
     res[game].icon = await fetchAndOptimize(
       gameDataGlb.display.icon.url,
-      destPath,
+      iconDest,
       "icon",
       crypto.randomUUID(),
     );
     res[game].icon_cn = await fetchAndOptimize(
       gameDataCn.display.icon.url,
-      destPath,
+      iconDest,
       "icon",
       crypto.randomUUID(),
     );
     res[game].shortcut = await fetchAndOptimize(
       gameDataGlb.display.shortcut.url,
-      destPath,
+      iconDest,
       "icon",
       crypto.randomUUID(),
     );
     res[game].shortcut_cn = await fetchAndOptimize(
       gameDataCn.display.shortcut.url,
-      destPath,
+      iconDest,
       "icon",
       crypto.randomUUID(),
     );
@@ -150,6 +148,11 @@ const fetchAndOptimize = async (
 ): Promise<string> => {
   if (isURL(url)) {
     const ext = getExtensionFromURL(url);
+    if (!existsSync(destPath)) {
+      mkdirSync(destPath, {
+        recursive: true,
+      });
+    }
 
     const finalExt = ext === "webm" ? "mp4" : "png";
     const downloadPath = `${destPath}/temp-${kind}-${id}-download.${ext}`; // Name of file at download
