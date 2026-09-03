@@ -60,7 +60,16 @@ app
         StatusCodes.BadRequest,
       );
     }
-    return c.json(assets[game as Games][lang as Locales], StatusCodes.Ok);
+    const gameAssets = assets[game as Games];
+    const res = {
+      backgrounds: gameAssets[lang as Locales],
+      icon: gameAssets.icon,
+      icon_cn: gameAssets.icon_cn,
+      shortcut: gameAssets.shortcut,
+      shortcut_cn: gameAssets.icon_cn
+    }
+
+    return c.json(res, StatusCodes.Ok);
   })
   .get("/getComponents", (c) => {
     return c.json({ body: "TODO!" }, StatusCodes.Ok);
