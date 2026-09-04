@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "node ./StaticGenerator.ts && wrangler deploy --minify",
+    "deploy": "node ./src/assetOptimizer/assetOptimizer.ts && wrangler deploy --minify",
+    "generate": "node ./src/assetOptimizer/assetOptimizer.ts",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {

@@ -2,8 +2,13 @@
 import { Hono } from "hono";
 // @ts-ignore
 import { prettyJSON } from "hono/pretty-json";
-import assets from "../static/launcher-assets.json" with { type: "json" };
-import { type Games, GAMES, type Locales, SUPPORTED_LOCALES } from "./types.ts";
+import assets from "../../static/launcher-assets.json" with { type: "json" };
+import {
+  type Games,
+  GAMES,
+  type Locales,
+  SUPPORTED_LOCALES,
+} from "../types.ts";
 
 enum StatusCodes {
   Ok = 200,
@@ -22,7 +27,7 @@ const app = new Hono().use(prettyJSON());
 app
   .get("/", (c) => {
     return c.html(
-      "<p style=\"font-size: 5rem;\">Aedes (, by The) Elysiae (Project), API v3.0</p>",
+      '<p style="font-size: 5rem;">Aedes (, by The) Elysiae (Project), API v3.0</p>',
       StatusCodes.Ok,
     );
   })
@@ -66,13 +71,16 @@ app
       icon: gameAssets.icon,
       icon_cn: gameAssets.icon_cn,
       shortcut: gameAssets.shortcut,
-      shortcut_cn: gameAssets.icon_cn
-    }
+      shortcut_cn: gameAssets.icon_cn,
+    };
 
     return c.json(res, StatusCodes.Ok);
   })
-  .get("/getComponents", (c) => {
+  .get("/getComponentInfo", (c) => {
     return c.json({ body: "TODO!" }, StatusCodes.Ok);
+  })
+  .get("/getComponents", (c) => {
+    return c.json({}, StatusCodes.Ok);
   })
   .get("/teapot", (c) => {
     return c.body("I'm a teapot!", StatusCodes.Teapot);
