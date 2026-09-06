@@ -5,6 +5,7 @@ import {
   type BackgroundEndpoint,
   CN_ICONS_SCRAPE_ENDPOINT,
   type EndpointIconAssetData,
+  GAMES,
   type Games,
   ICONS_SCRAPE_ENDPOINT,
   type LocaleBackgroundAsset,
@@ -21,8 +22,8 @@ export const regenerateAssetData = async () => {
       ).json()) as BackgroundEndpoint;
       const data = response.data.game_info_list;
 
-      // After index 3, the same bh3 content is repeated a few times. Those are not needed
-      for (let i = 0; i < 4; i++) {
+      // After index 5, the same bh3 content is repeated a few times. Those are not needed
+      for (let i = 0; i < GAMES.length; i++) {
         const gameData = data[i];
         if (!gameData) {
           console.warn("Game data does not exist");
@@ -79,7 +80,7 @@ export const regenerateAssetData = async () => {
   ).json()) as EndpointIconAssetData;
   // Set Icon Data
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < GAMES.length; i++) {
     const gameDataGlb = iconResponseGlobal.data.games[i];
     const gameDataCn = iconResponseChina.data.games[i];
 

@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: Some endpoint properties have types that are unknown until updated, if they ever are */
-export const GAMES = ["bh3", "hk4e", "hkrpg", "nap"] as const;
+export const GAMES = ["bh3", "hk4e", "hkrpg", "nap", "abc", "hyg"] as const;
 export const SUPPORTED_LOCALES = [
   "en-us",
   "zh-cn",

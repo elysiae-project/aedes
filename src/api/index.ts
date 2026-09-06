@@ -31,6 +31,9 @@ app
       StatusCodes.Ok,
     );
   })
+  .get("/getGames", (c) => {
+    return c.json(GAMES, StatusCodes.Ok);
+  })
   .get("/getAssets", (c) => {
     // Change POSIX to IETF BCP 47 locale code
     const lang = c.req.query("lang")?.replaceAll("_", "-").toLocaleLowerCase();
@@ -65,16 +68,24 @@ app
         StatusCodes.BadRequest,
       );
     }
-    const gameAssets = assets[game as Games];
-    const res = {
-      backgrounds: gameAssets[lang as Locales],
-      icon: gameAssets.icon,
-      icon_cn: gameAssets.icon_cn,
-      shortcut: gameAssets.shortcut,
-      shortcut_cn: gameAssets.icon_cn,
-    };
 
-    return c.json(res, StatusCodes.Ok);
+    try {
+      const gameAssets = assets[game as Games];
+      const res = {
+        backgrounds: gameAssets[lang as Locales],
+        icon: gameAssets.icon,
+        icon_cn: gameAssets.icon_cn,
+        shortcut: gameAssets.shortcut,
+        shortcut_cn: gameAssets.icon_cn,
+      };
+
+      return c.json(res, StatusCodes.Ok);
+    } catch (e: any) {
+      return c.body(
+        `Aedes encountered an error while processing your request: ${e}\nPlease open an issue on https://github.com/elysiae/project/aedes to have a member of The Elysiae Project review your problem`,
+        StatusCodes.InternalError,
+      );
+    }
   })
   .get("/getComponentInfo", (c) => {
     return c.json({ body: "TODO!" }, StatusCodes.Ok);
