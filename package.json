@@ -8,15 +8,15 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.13.4"
+    "hono": "^4.13.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.10",
-    "@types/node": "^26.3.0",
+    "@biomejs/biome": "^2.5.12",
+    "@types/node": "^26.4.1",
     "prettier": "^3.9.6",
     "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "^7.0.2",
-    "wrangler": "4.127.1"
+    "wrangler": "4.129.0"
   },
   "packageManager": "yarn@4.18.0"
 }

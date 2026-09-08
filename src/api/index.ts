@@ -19,7 +19,7 @@ enum StatusCodes {
 }
 
 console.log(
-  "Aedes is licensed under the GNU Afferro License (v3). Please follow the license terms when redistributing or creating forks of Aedes. The Elysiae Project provides NO WARRANTY for any of its software, any failure is your own responsibility",
+  "Aedes is licensed under the GNU Affero License (Version 3 or later). Please follow the license terms when redistributing or creating forks of Aedes. The Elysiae Project provides NO WARRANTY for any of its software; you are responsible for data loss and other negative consequences produced by Aedes",
 );
 
 const app = new Hono().use(prettyJSON());
@@ -39,7 +39,7 @@ app
     const lang = c.req.query("lang")?.replaceAll("_", "-").toLocaleLowerCase();
     const game = c.req.query("game")?.toLocaleLowerCase();
     if (!assets || Object.keys(assets).length === 0) {
-      return c.text(
+      return c.body(
         "ERROR: This endpoint doesn't have the required assets generated to complete your request. If you are the owner of this instance of Aedes, ensure that the static folder exists before re-deploying (it should if you haven't messed with the scripts in package.json)",
         StatusCodes.InternalError,
       );
@@ -72,15 +72,15 @@ app
     try {
       const gameAssets = assets[game as Games];
       const res = {
-        backgrounds: gameAssets[lang as Locales],
-        icon: gameAssets.icon,
-        icon_cn: gameAssets.icon_cn,
-        shortcut: gameAssets.shortcut,
-        shortcut_cn: gameAssets.icon_cn,
+        backgrounds: gameAssets[lang as Locales] ?? {},
+        icon: gameAssets.icon ?? "",
+        icon_cn: gameAssets.icon_cn ?? "",
+        shortcut: gameAssets.shortcut ?? "",
+        shortcut_cn: gameAssets.icon_cn ?? "",
       };
 
       return c.json(res, StatusCodes.Ok);
-    } catch (e: any) {
+    } catch (e) {
       return c.body(
         `Aedes encountered an error while processing your request: ${e}\nPlease open an issue on https://github.com/elysiae/project/aedes to have a member of The Elysiae Project review your problem`,
         StatusCodes.InternalError,
