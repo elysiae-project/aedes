@@ -1,9 +1,15 @@
 /** biome-ignore-all lint/suspicious/noTsIgnore: Some files relied on by Aedes get generates before a dev/deploy starts, causing the files to be missing before a first run/deploy starts. This is intended behaviour and is meant to keep assets out of the GitHub repository*/
 import { Hono } from "hono";
-// @ts-ignore
 import { prettyJSON } from "hono/pretty-json";
+
+// @ts-ignore
 import assets from "../../static/launcher-assets.json" with { type: "json" };
+// @ts-ignore
+import components from "../../static/launcher-components.json" with { type: "json" };
+
 import {
+  type Components,
+  ELYSIAE_COMPONENT_NAMES,
   type Games,
   GAMES,
   type Locales,
@@ -26,8 +32,8 @@ const app = new Hono().use(prettyJSON());
 
 app
   .get("/", (c) => {
-    return c.html(
-      '<p style="font-size: 5rem;">Aedes (, by The) Elysiae (Project), API v3.0</p>',
+    return c.body(
+      "δ Aedes (, by The) Elysiae (Project), API v3.0 δ\nHello, World!",
       StatusCodes.Ok,
     );
   })
@@ -40,7 +46,7 @@ app
     const game = c.req.query("game")?.toLocaleLowerCase();
     if (!assets || Object.keys(assets).length === 0) {
       return c.body(
-        "ERROR: This endpoint doesn't have the required assets generated to complete your request. If you are the owner of this instance of Aedes, ensure that the static folder exists before re-deploying (it should if you haven't messed with the scripts in package.json)",
+        "This endpoint does not have the required assets (launcherAssets.json) to handle your requests. Please contact the maintainers of this Aedes instance for support",
         StatusCodes.InternalError,
       );
     }
@@ -88,10 +94,51 @@ app
     }
   })
   .get("/getComponentInfo", (c) => {
-    return c.json({ body: "TODO!" }, StatusCodes.Ok);
+    const component = c.req.query("component");
+    const arch = c.req.query("arch");
+    const latestOnly: boolean = typeof c.req.query("latest") !== "undefined";
+    if (!components || Object.keys(components).length === 0) {
+      return c.body(
+        `This endpoint does not have the required asset (launcherComponents.json) to handle your requests. Please contact the maintainers of this Aedes instance for support`,
+        StatusCodes.InternalError,
+      );
+    }
+
+    if (!component) {
+      return c.body(
+        `Required parameter 'component' is missing`,
+        StatusCodes.BadRequest,
+      );
+    }
+    if (!arch) {
+      return c.body(
+        `Required parameter 'arch' is missing`,
+        StatusCodes.BadRequest,
+      );
+    }
+
+    if (!["amd64", "aarch64"].includes(arch)) {
+      return c.body(
+        `Required parameter 'arc' has invalid data set as its value. Please consult the documentation for components provided by Aedes`,
+        StatusCodes.BadRequest,
+      );
+    }
+
+    if (!ELYSIAE_COMPONENT_NAMES.includes(component as Components)) {
+      return c.body(
+        `Required parameter 'componentName' has invalid data set as its value. Please consult the documentation for components provided by Aedes`,
+        StatusCodes.BadRequest,
+      );
+    }
+    return c.json(
+      latestOnly
+        ? components[component as Components][0]
+        : components[component as Components],
+      StatusCodes.Ok,
+    );
   })
   .get("/getComponents", (c) => {
-    return c.json({}, StatusCodes.Ok);
+    return c.json(ELYSIAE_COMPONENT_NAMES, StatusCodes.Ok);
   })
   .get("/teapot", (c) => {
     return c.body("I'm a teapot!", StatusCodes.Teapot);

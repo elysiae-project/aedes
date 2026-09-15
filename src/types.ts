@@ -16,7 +16,8 @@ export const SUPPORTED_LOCALES = [
   "pt-br",
 ] as const;
 
-export const ELYSIAE_COMPONENTS = ["phlogiston"] as const;
+export const ELYSIAE_COMPONENT_NAMES = ["phlogiston"] as const;
+export const ELYSIAE_COMPONENT_REPOS = ["elysiae-project/phlogiston"] as const;
 export const ASSETS_SCRAPE_ENDPOINT =
   "\x68\x74\x74\x70\x73\x3a\x2f\x2f\x73\x67\x2d\x68\x79\x70\x2d\x61\x70\x69\x2e\x68\x6f\x79\x6f\x76\x65\x72\x73\x65\x2e\x63\x6f\x6d\x2f\x68\x79\x70\x2f\x68\x79\x70\x2d\x63\x6f\x6e\x6e\x65\x63\x74\x2f\x61\x70\x69\x2f\x67\x65\x74\x41\x6c\x6c\x47\x61\x6d\x65\x42\x61\x73\x69\x63\x49\x6e\x66\x6f\x3f\x6c\x61\x75\x6e\x63\x68\x65\x72\x5f\x69\x64\x3d\x56\x59\x54\x70\x58\x6c\x62\x57\x6f\x38\x26\x6c\x61\x6e\x67\x75\x61\x67\x65\x3d"; // Locale parameter value is missing, append by just adding a supported locale code to the end of this string
 export const ICONS_SCRAPE_ENDPOINT =
@@ -132,9 +133,66 @@ export type EndpointIconAssetData = {
   };
 };
 
+export type GithubApiReleases = {
+  url: string;
+  assets_url: string;
+  upload_url: string;
+  html_url: string;
+  id: number;
+  author: GithubUserInfo;
+  node_id: string;
+  tag_name: string;
+  draft: boolean;
+  immutable: boolean;
+  prerelease: boolean;
+  created_at: string;
+  updated_at: string;
+  published_at: string;
+  assets: GithubReleaseAsset[];
+};
+
+export type GithubReleaseAsset = {
+  url: string;
+  id: number;
+  node_id: string;
+  name: string;
+  label: string;
+  uploader: GithubUserInfo;
+  content_type: string;
+  state: string;
+  size: number;
+  digest: string;
+  download_count: number;
+  created_at: string;
+  updated_at: string;
+  browser_download_url: string;
+};
+
+export type GithubUserInfo = {
+  login: string;
+  id: number;
+  node_id: string;
+  avatar_url: string;
+  gravatar_id: string;
+  url: string;
+  html_url: string;
+  followers_url: string;
+  following_url: string;
+  gists_url: string;
+  starred_url: string;
+  subscriptions_url: string;
+  organizations_url: string;
+  repos_url: string;
+  events_url: string;
+  received_events_url: string;
+  type: "Bot" | "User";
+  user_view_type: "public" | "private"; // Best guess
+  site_admin: boolean;
+};
+
 export type Locales = (typeof SUPPORTED_LOCALES)[number];
 export type Games = (typeof GAMES)[number];
-export type Components = (typeof ELYSIAE_COMPONENTS)[number];
+export type Components = (typeof ELYSIAE_COMPONENT_NAMES)[number];
 
 export type LocaleBackgroundAsset = {
   image: string;
@@ -142,14 +200,26 @@ export type LocaleBackgroundAsset = {
   overlay: string | null;
 };
 
-export interface ComponentAsset {
+export type ComponentAsset = {
   tag: string;
-  url: string;
-  hash: string;
-}
-[];
+  download:
+    | string
+    | {
+        amd64: {
+          url: string;
+          checksum: string;
+        };
+        aarch64: {
+          url: string;
+          checksum: string;
+        };
+      };
+  prerelease: boolean;
+};
 
-export type AedesComponents = Record<Components, ComponentAsset>;
+export type AedesComponents = {
+  [key in Components]: ComponentAsset[];
+};
 
 export type AedesAssets = {
   [G in Games]: {
