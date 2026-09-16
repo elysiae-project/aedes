@@ -1,6 +1,6 @@
 # Aedes
 
-Aedes is the Elysiae Project's api endpoint which provides:
+Aedes is the Elysiae Project's API endpoint which provides:
 
 1. Optimised assets from the games supported by the Elysiae launcher (all supported locales).
 2. Custom components the Elysiae launcher requires to play games

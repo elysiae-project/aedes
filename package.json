@@ -1,5 +1,8 @@
 {
   "name": "aedes",
+  "author": "The Elysiae Project",
+  "description": "Unified Optimized Asset/Component endpoint for Chinese Video Games",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
