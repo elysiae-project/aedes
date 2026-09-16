@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "node ./src/assetOptimizer/assetOptimizer.ts && wrangler deploy --minify",
+    "deploy": "wrangler deploy --minify",
     "generate": "node ./src/assetOptimizer/assetOptimizer.ts",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
