@@ -23,9 +23,9 @@ jobs:
             
             - name: Install Deps
               run: |
-                add-apt-repository universe
-                apt update
-                apt install ffmpeg
+                sudo add-apt-repository universe
+                sudo apt update
+                sudo apt install ffmpeg
             
             - name: Install Project Deps
               run: |
