@@ -22,6 +22,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "rewriteRelativeImportExtensions": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": false
   }
 }
