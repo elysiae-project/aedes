@@ -1,19 +1,21 @@
 import { writeFileSync } from "node:fs";
+import type {
+  AedesComponents,
+  GithubApiReleases,
+  GithubReleaseAsset,
+} from "../types/GitHub.ts";
 import {
   ASSETS_SCRAPE_ENDPOINT,
-  type AedesAssets,
-  type AedesComponents,
-  type BackgroundEndpoint,
   CN_ICONS_SCRAPE_ENDPOINT,
-  type EndpointIconAssetData,
   GAMES,
-  type Games,
-  type GithubApiReleases,
-  type GithubReleaseAsset,
   ICONS_SCRAPE_ENDPOINT,
-  type LocaleBackgroundAsset,
   SUPPORTED_LOCALES,
-} from "../types.ts";
+  type AedesAssets,
+  type BackgroundEndpoint,
+  type EndpointIconAssetData,
+  type Games,
+  type LocaleBackgroundAsset,
+} from "../types/Hyp.ts";
 import { fetchAndOptimize } from "./util.ts";
 
 const regenerateAssetData = async () => {

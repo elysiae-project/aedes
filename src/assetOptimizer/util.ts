@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { get } from "node:https";
 import { promisify } from "node:util";
-import type { AssetKind } from "../types.ts";
+import type { AssetKind } from "../types/Hyp.ts";
 
 const execAsync = promisify(exec);
 
@@ -25,39 +25,40 @@ export const fetchAndOptimize = async (
   kind: AssetKind,
   id: string,
 ): Promise<string> => {
-  if (isURL(url)) {
-    const ext = getExtensionFromURL(url);
-    if (!existsSync(destPath)) {
-      mkdirSync(destPath, {
-        recursive: true,
-      });
-    }
+  if (!isURL(url)) {
+    throw new Error(`URL ${url} is invalid`);
+  }
+  const ext = getExtensionFromURL(url);
+  if (!existsSync(destPath)) {
+    mkdirSync(destPath, {
+      recursive: true,
+    });
+  }
 
-    const finalExt = ext === "webm" ? "mp4" : "png";
-    const downloadPath = `${destPath}/temp-${kind}-${id}-download.${ext}`; // Name of file at download
-    const optimizedPath = `${destPath}/temp-${kind}-${id}-optimized.${finalExt}`; // Name of file after optimized
+  const finalExt = ext === "webm" ? "mp4" : "png";
+  const downloadPath = `${destPath}/temp-${kind}-${id}-download.${ext}`; // Name of file at download
+  const optimizedPath = `${destPath}/temp-${kind}-${id}-optimized.${finalExt}`; // Name of file after optimized
 
-    await downloadFile(url, downloadPath);
+  await downloadFile(url, downloadPath);
 
-    // Optimize
-    const filters =
-      kind === "video"
-        ? `-c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`
-        : "-lossless 1 -compression_level 6";
+  // Optimize
+  const filters =
+    kind === "video"
+      ? `-c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`
+      : "-lossless 1 -compression_level 6";
 
-    await execAsync(
-      `ffmpeg -y -i "${downloadPath}" ${filters} "${optimizedPath}"`,
-    );
+  await execAsync(
+    `ffmpeg -y -i "${downloadPath}" ${filters} "${optimizedPath}"`,
+  );
 
-    unlinkSync(downloadPath);
-    const hash = await computeFileHash(optimizedPath);
-    const finalPath = `${destPath}/${hash}.${finalExt}`;
+  unlinkSync(downloadPath);
+  const hash = await computeFileHash(optimizedPath);
+  const finalPath = `${destPath}/${hash}.${finalExt}`;
 
-    renameSync(optimizedPath, finalPath);
+  renameSync(optimizedPath, finalPath);
 
-    // Temporary fix that will probably remain permanent. Anything in the static/ folder will be placed in /  (rather than /static/) once wrangler starts
-    return finalPath.slice(8);
-  } else throw new Error(`url ${url} is invalid`);
+  // Temporary fix that will probably remain permanent. Anything in the static/ folder will be placed in /  (rather than /static/) once wrangler starts
+  return finalPath.replace(/^\/static/i, "/");
 };
 
 /**
