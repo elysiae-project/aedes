@@ -6,15 +6,8 @@ import { prettyJSON } from "hono/pretty-json";
 import assets from "../../static/launcher-assets.json" with { type: "json" };
 // @ts-ignore
 import components from "../../static/launcher-components.json" with { type: "json" };
-
-import {
-  type Components,
-  ELYSIAE_COMPONENT_NAMES,
-  type Games,
-  GAMES,
-  type Locales,
-  SUPPORTED_LOCALES,
-} from "../types.ts";
+import { GAMES, SUPPORTED_LOCALES, type Games, type Locales } from "../types/Hyp.ts";
+import { ELYSIAE_COMPONENT_NAMES, type Components } from "../types/GitHub.ts";
 
 enum StatusCodes {
   Ok = 200,

@@ -23,7 +23,7 @@ Unifying optimized assets and components into one custom endpoint results in a s
 
 ## Aedes API
 
-TODO
+The Aedes API is still a work in progress!
 
 ## Legal
 
@@ -31,4 +31,4 @@ The Elysiae project is *not* the copyright holder for the assets provided throug
 
 Components re-distributed by Aedes are done so under their respective binary redistribution terms.
 
-Aedes is licensed under the AGPLv3 license. Please follow the license if you are creating a fork or redistributing the Aedes source code.
+Aedes is licensed under the GNU Affero Public License V3. Please follow the license if you are creating a fork or redistributing the Aedes source code.
