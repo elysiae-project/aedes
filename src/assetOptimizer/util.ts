@@ -56,9 +56,7 @@ export const fetchAndOptimize = async (
   const finalPath = `${destPath}/${hash}.${finalExt}`;
 
   renameSync(optimizedPath, finalPath);
-
-  // Temporary fix that will probably remain permanent. Anything in the static/ folder will be placed in /  (rather than /static/) once wrangler starts
-  return finalPath.replace(/^\/static/i, "/");
+  return finalPath.replace(/^.*?static\//i, "/");
 };
 
 /**
