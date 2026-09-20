@@ -171,7 +171,7 @@ const getPhlogistonArchIndex = (
 ): number | null => {
   for (let i = 0; i < data.assets.length; i++) {
     const current = data.assets[i] as GithubReleaseAsset;
-    if (current.name.includes(arch)) {
+    if (current.name.includes(arch) && !current.name.includes(".sha512sum")) {
       return i;
     }
   }
