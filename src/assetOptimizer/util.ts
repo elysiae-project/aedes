@@ -45,7 +45,7 @@ export const fetchAndOptimize = async (
   const filters =
     kind === "video"
       ? `-sws_flags lanczos -c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`
-      : `-sws_flags lanczos -lossless 1 -compression_level 3`;
+      : `-sws_flags lanczos -lossless 1 -compression_level 6`;
   await execAsync(
     `ffmpeg -y -i "${downloadPath}" ${filters} "${optimizedPath}"`,
   );
