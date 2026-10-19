@@ -44,8 +44,8 @@ export const fetchAndOptimize = async (
   // Optimize
   const filters =
     kind === "video"
-      ? `-c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`
-      : "-lossless 1 -compression_level 6";
+      ? `-c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 scale=width:height:flags=lanczos -preset fast -movflags +faststart -c:a copy`
+      : "-lossless 1 -compression_level 6 scale=width:height:flags=lanczos";
 
   await execAsync(
     `ffmpeg -y -i "${downloadPath}" ${filters} "${optimizedPath}"`,
