@@ -11,15 +11,15 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.13.7"
+    "hono": "^4.13.13"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
-    "@types/node": "^26.4.1",
-    "prettier": "^3.9.6",
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^26.6.5",
+    "prettier": "^3.9.10",
     "prettier-plugin-organize-imports": "^4.3.0",
     "typescript": "^7.0.2",
-    "wrangler": "4.129.0"
+    "wrangler": "4.149.0"
   },
   "packageManager": "yarn@4.18.1+sha512.b2e1e7524f654f2749d32b4ebcb4622473cb5bcbc485df2007e12a154e50162a4d795526768bc5f5b8f81717bfd79deb2472813d86fb5ae2eb551fa9c872b08f"
 }
