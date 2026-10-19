@@ -4,6 +4,7 @@
   "description": "Unified Optimized Asset/Component endpoint for Chinese Video Games",
   "license": "AGPL-3.0-only",
   "type": "module",
+  "version": "3.0.1",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
