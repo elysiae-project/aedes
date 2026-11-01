@@ -179,6 +179,19 @@ const getPhlogistonArchIndex = (
 };
 
 (async () => {
+  if (!(await lookpath("ffmpeg"))) {
+    console.error(
+      "FFMpeg was not found on your system path. Please install FFMpeg and ensure that it is on your system path to run the Aedes asset optimiser",
+    );
+    return;
+  }
+
+  if (!(await lookpath("magick"))) {
+    console.error(
+      "ImageMagick was not found on your system path. Please install ImageMagick and ensure that it is on your system path to run the Aedes asset optimiser.",
+    );
+  }
+
   console.log("Creating optimized asset/component data files");
   await regenerateAssetData();
 
