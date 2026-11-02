@@ -11,6 +11,7 @@ import {
 import { get } from "node:https";
 import { promisify } from "node:util";
 import type { AssetKind } from "../types/Hyp.ts";
+import { pipeline } from "node:stream/promises";
 
 const execAsync = promisify(exec);
 
@@ -24,6 +25,7 @@ export const fetchAndOptimize = async (
   destPath: string,
   kind: AssetKind,
   id: string = crypto.randomUUID(),
+  maxRetries: number = 5,
 ): Promise<string> => {
   if (!isURL(url)) {
     throw new Error(`URL ${url} is invalid`);
@@ -35,20 +37,51 @@ export const fetchAndOptimize = async (
     });
   }
 
-  const finalExt = ext === "webm" ? "mp4" : "png";
+  const finalExt = ext === "webm" ? "mp4" : "jxl";
   const downloadPath = `${destPath}/temp-${kind}-${id}-download.${ext}`; // Name of file at download
   const optimizedPath = `${destPath}/temp-${kind}-${id}-optimized.${finalExt}`; // Name of file after optimized
 
-  await downloadFile(url, downloadPath);
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await downloadFile(url, downloadPath);
+      // biome-ignore lint/suspicious/noExplicitAny: required for a type suppression
+    } catch (e: any) {
+      if (i === maxRetries - 1) {
+        console.error(
+          `Download Failure: All requests to ${url} failed: ${e.code || e.message}`,
+        );
+        return "";
+      } else {
+        const waitTime = 2 ** i * 1000;
+
+        console.warn(
+          `Request to ${url} failed: ${e.code || e.message}. Retrying in ${waitTime / 1000} seconds (${i + 1}/${maxRetries})`,
+        );
+        await new Promise((t) => setTimeout(t, waitTime));
+      }
+    }
+  }
 
   // Optimize
-  const filters =
-    kind === "video"
-      ? `-sws_flags lanczos -c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`
-      : `-sws_flags lanczos -lossless 1 -compression_level 6`;
-  await execAsync(
-    `ffmpeg -y -i "${downloadPath}" ${filters} "${optimizedPath}"`,
-  );
+  switch (kind) {
+    case "video": {
+      const ffmpegFilters = `-sws_flags lanczos -c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`;
+
+      await execAsync(
+        `ffmpeg -y -i "${downloadPath}" ${ffmpegFilters} "${optimizedPath}"`,
+      );
+      break;
+    }
+    default: {
+      // Every other scraped asset is some form of image
+      const magickFilters = `-strip -quality 85`;
+
+      await execAsync(
+        `magick "${downloadPath}" ${magickFilters} "${optimizedPath}"`,
+      );
+      break;
+    }
+  }
 
   unlinkSync(downloadPath);
   const hash = await computeFileHash(optimizedPath);
@@ -87,34 +120,59 @@ const isURL = (url: string): boolean => {
  * Downloads a file to a destination folder, then renames it to the sha256sum of the file
  * @param url file download url
  * @param dest destination path, no file name
+ * @param redirects how many times the url has been redirected
+ * @param maxRedirects how many redirects the function should attempt doing before throwing an errors
  */
-const downloadFile = async (url: string, dest: string): Promise<void> => {
+const downloadFile = async (
+  url: string,
+  dest: string,
+  redirects: number = 0,
+  maxRedirects: number = 5,
+): Promise<void> => {
   if (!isURL(url)) {
     throw new Error("This url is invalid");
   }
-
   return new Promise((resolve, reject) => {
-    const file = createWriteStream(dest);
-    get(url, (response) => {
-      if (response.statusCode !== 200) {
-        file.close(() =>
-          reject(new Error(`HTTP ${response.statusCode} for ${url}`)),
-        );
-        return;
+    const request = get(url, { timeout: 45000 }, async (res) => {
+      if (!res?.statusCode) {
+        return reject("downloadFile: 'response' is undefined");
       }
-
-      response.pipe(file);
-
-      file.on("finish", () => {
-        file.close((e) => {
-          if (e) reject(e);
-          else resolve();
-        });
-      });
-
-      file.on("error", (e) => reject(e));
-      response.on("error", (e) => reject(e));
+      // Redirect, if permitted
+      if (
+        res.statusCode >= 300 &&
+        res.statusCode <= 400 &&
+        res.headers.location
+      ) {
+        res.resume();
+        if (redirects >= maxRedirects)
+          return reject(new Error("downloadFile: Too many redirects"));
+        return downloadFile(
+          new URL(res.headers.location, url).href,
+          dest,
+          redirects + 1,
+        );
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(
+          new Error(
+            `downloadFile: Status code ${res.statusCode} returned by ${url}`,
+          ),
+        );
+      }
+      try {
+        await pipeline(res, createWriteStream(dest));
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
+    request.on("timeout", () =>
+      request.destroy(
+        new Error(`downloadFile: Socket timeout produced by ${url}`),
+      ),
+    );
+    request.on("error", reject);
   });
 };
 

@@ -28,7 +28,6 @@ const fetchLimit = pLimit(4);
 
 const regenerateAssetData = async () => {
   const res = {} as AedesAssets;
-  const idSeparator = /_.*/g;
 
   await Promise.all(
     SUPPORTED_LOCALES.map(
@@ -45,7 +44,7 @@ const regenerateAssetData = async () => {
                 await gameLimit(async () => {
                   const gameData = data[index];
                   const gameCode = gameData?.game.biz.replaceAll(
-                    idSeparator,
+                    /_.*/g,
                     "",
                   ) as Games;
                   if (!gameData) {
@@ -112,7 +111,7 @@ const regenerateAssetData = async () => {
         const glbGameData = iconResGlobal[index];
         const cnGameData = iconResCn[index];
 
-        const gameCode = glbGameData?.biz.replaceAll(idSeparator, "") as Games;
+        const gameCode = glbGameData?.biz.replaceAll(/_.*/g, "") as Games;
 
         if (!glbGameData) {
           console.error(
@@ -150,7 +149,7 @@ const regenerateAssetData = async () => {
 };
 
 const regenerateComponentData = async () => {
-  // Only phlogiston exists so there's no point in using fancy for loops to dynamically fetch everything
+  // Only phlogiston exists so there's no point in using fancy for loops to fetch everything
   const res = {} as AedesComponents;
   const apiResponse = (await (
     await fetch(
