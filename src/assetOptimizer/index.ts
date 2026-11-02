@@ -131,12 +131,12 @@ const regenerateAssetData = async () => {
             res[gameCode][asset] = await fetchAndOptimize(
               glbGameData.display[asset].url,
               iconDest,
-              "icon",
+              asset,
             );
             res[gameCode][`${asset}_cn`] = await fetchAndOptimize(
               cnGameData?.display[asset].url,
               iconDest,
-              "icon",
+              asset,
             );
           }),
         );
