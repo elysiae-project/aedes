@@ -52,7 +52,7 @@ const app = new Hono().use(prettyJSON());
 app
   .get("/", (c) => {
     return c.body(
-      "δ Aedes, by the Elysiae Project (version 3.0.2)\nHello, World!",
+      "δ Aedes, by the Elysiae Project (version 3.1.0)\nHello, World!",
       StatusCodes.Ok,
     );
   })
