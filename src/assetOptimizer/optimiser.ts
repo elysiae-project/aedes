@@ -1,19 +1,15 @@
-import { exec } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  copyFileSync,
   createReadStream,
-  createWriteStream,
   existsSync,
   mkdirSync,
   renameSync,
   unlinkSync,
 } from "node:fs";
-import { get } from "node:https";
-import { promisify } from "node:util";
 import type { AssetKind } from "../types/Hyp.ts";
-import { pipeline } from "node:stream/promises";
-
-const execAsync = promisify(exec);
+import { execAsync } from "./cli.ts";
+import { downloadFile, getExtensionFromURL, isURL } from "./web.ts";
 
 /**
  * Optimizes an image/video asset using FFMpeg. Deletes file when optimization is complete
@@ -37,7 +33,7 @@ export const fetchAndOptimize = async (
     });
   }
 
-  const finalExt = ext === "webm" ? "mp4" : "jxl";
+  const finalExt = ext === "webm" ? "mp4" : ext === "ico" ? "ico" : "jxl";
   const downloadPath = `${destPath}/temp-${kind}-${id}-download.${ext}`; // Name of file at download
   const optimizedPath = `${destPath}/temp-${kind}-${id}-optimized.${finalExt}`; // Name of file after optimized
 
@@ -66,18 +62,20 @@ export const fetchAndOptimize = async (
   switch (kind) {
     case "video": {
       const ffmpegFilters = `-sws_flags lanczos -c:v libx264 -tune animation -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc iec61966-2-1 -preset fast -movflags +faststart -c:a copy`;
-
       await execAsync(
         `ffmpeg -y -i "${downloadPath}" ${ffmpegFilters} "${optimizedPath}"`,
       );
       break;
     }
+    case "icon": {
+      // Desktop shortcut files do not need to be optimized
+      copyFileSync(downloadPath, optimizedPath);
+      break;
+    }
     default: {
-      // Every other scraped asset is some form of image
-      const magickFilters = `-strip -quality 85`;
-
+      // Every other scraped asset is some form of normal image
       await execAsync(
-        `magick "${downloadPath}" ${magickFilters} "${optimizedPath}"`,
+        `magick "${downloadPath}[0]" -strip -quality 85 "${optimizedPath}"`,
       );
       break;
     }
@@ -89,91 +87,6 @@ export const fetchAndOptimize = async (
 
   renameSync(optimizedPath, finalPath);
   return finalPath.replace(/^.*?static\//i, "/");
-};
-
-/**
- * Gets the file extension from a valid download URL
- * @param url the web URL
- * @returns File extension of the valid download URL. otherwise returns an empty string or invalid data
- */
-const getExtensionFromURL = (url: string): string => {
-  if (isURL(url)) {
-    return url.split(/[#?]/)[0]?.split(".").pop()?.trim() as string;
-  } else return "";
-};
-
-/**
- * Checks if a string is a valid URL or not
- * @param url string to test if it is a URL
- * @returns weather or not `url` is a string or not
- */
-const isURL = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-/**
- * Downloads a file to a destination folder, then renames it to the sha256sum of the file
- * @param url file download url
- * @param dest destination path, no file name
- * @param redirects how many times the url has been redirected
- * @param maxRedirects how many redirects the function should attempt doing before throwing an errors
- */
-const downloadFile = async (
-  url: string,
-  dest: string,
-  redirects: number = 0,
-  maxRedirects: number = 5,
-): Promise<void> => {
-  if (!isURL(url)) {
-    throw new Error("This url is invalid");
-  }
-  return new Promise((resolve, reject) => {
-    const request = get(url, { timeout: 45000 }, async (res) => {
-      if (!res?.statusCode) {
-        return reject("downloadFile: 'response' is undefined");
-      }
-      // Redirect, if permitted
-      if (
-        res.statusCode >= 300 &&
-        res.statusCode <= 400 &&
-        res.headers.location
-      ) {
-        res.resume();
-        if (redirects >= maxRedirects)
-          return reject(new Error("downloadFile: Too many redirects"));
-        return downloadFile(
-          new URL(res.headers.location, url).href,
-          dest,
-          redirects + 1,
-        );
-      }
-      if (res.statusCode !== 200) {
-        res.resume();
-        return reject(
-          new Error(
-            `downloadFile: Status code ${res.statusCode} returned by ${url}`,
-          ),
-        );
-      }
-      try {
-        await pipeline(res, createWriteStream(dest));
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-    request.on("timeout", () =>
-      request.destroy(
-        new Error(`downloadFile: Socket timeout produced by ${url}`),
-      ),
-    );
-    request.on("error", reject);
-  });
 };
 
 /**

@@ -16,7 +16,7 @@ import {
   type Games,
   type LocaleBackgroundAsset,
 } from "../types/Hyp.ts";
-import { fetchAndOptimize } from "./util.ts";
+import { fetchAndOptimize } from "./optimiser.ts";
 
 import pLimit from "p-limit";
 import { lookpath } from "lookpath";
@@ -83,7 +83,6 @@ const regenerateAssetData = async () => {
                         }),
                     ),
                   );
-
                   res[gameCode] ??= {} as AedesAssets[Games];
                   res[gameCode][locale] = bgData;
                 }),
@@ -213,6 +212,11 @@ const getPhlogistonArchIndex = (
   if (!(await lookpath("magick"))) {
     console.error(
       "ImageMagick was not found on your system path. Please install ImageMagick and ensure that it is on your system path to run the Aedes asset optimiser.",
+    );
+  }
+  if (!(await lookpath("cjxl"))) {
+    console.error(
+      "libjxl was not found on your system path. Please install libjxl and ensure that it is on your system path to run the Aedes asset optimiser.",
     );
   }
 
