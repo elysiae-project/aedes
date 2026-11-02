@@ -23,7 +23,7 @@ export const fetchAndOptimize = async (
   url: string,
   destPath: string,
   kind: AssetKind,
-  id: string,
+  id: string = crypto.randomUUID(),
 ): Promise<string> => {
   if (!isURL(url)) {
     throw new Error(`URL ${url} is invalid`);

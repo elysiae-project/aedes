@@ -18,108 +18,133 @@ import {
 } from "../types/Hyp.ts";
 import { fetchAndOptimize } from "./util.ts";
 
+import pLimit from "p-limit";
+import { lookpath } from "lookpath";
+
+const localeLimit = pLimit(2);
+const gameLimit = pLimit(2);
+const iconLimit = pLimit(2);
+const fetchLimit = pLimit(4);
+
 const regenerateAssetData = async () => {
   const res = {} as AedesAssets;
+  const idSeparator = /_.*/g;
+
   await Promise.all(
-    SUPPORTED_LOCALES.map(async (locale) => {
-      const response = (await (
-        await fetch(`${ASSETS_SCRAPE_ENDPOINT}${locale}`)
-      ).json()) as BackgroundEndpoint;
-      const data = response.data.game_info_list;
+    SUPPORTED_LOCALES.map(
+      async (locale) =>
+        await localeLimit(async () => {
+          const response = (await (
+            await fetch(`${ASSETS_SCRAPE_ENDPOINT}${locale}`)
+          ).json()) as BackgroundEndpoint;
+          const data = response.data.game_info_list.slice(0, 6);
 
-      // After index 5, the same bh3 content is repeated a few times. Those are not needed
-      for (let i = 0; i < GAMES.length; i++) {
-        const gameData = data[i];
-        if (!gameData) {
-          console.warn("Game data does not exist");
-          continue;
-        }
+          await Promise.all(
+            GAMES.map(
+              async (_game, index) =>
+                await gameLimit(async () => {
+                  const gameData = data[index];
+                  const gameCode = gameData?.game.biz.replaceAll(
+                    idSeparator,
+                    "",
+                  ) as Games;
+                  if (!gameData) {
+                    console.error(`Game data for '${gameCode}' does not exist`);
+                    return;
+                  }
 
-        const game = gameData.game.biz.split("_")[0] as Games;
-        const destPath = `./static/${game}/${locale}`;
+                  const destPath = `./static/${gameCode}/${locale}`;
+                  const bgData: LocaleBackgroundAsset[] = await Promise.all(
+                    gameData.backgrounds.map(
+                      async (bg) =>
+                        await fetchLimit(async () => {
+                          return {
+                            image: await fetchAndOptimize(
+                              bg.background.url,
+                              `${destPath}/image`,
+                              "image",
+                            ),
+                            video:
+                              bg.video.url !== ""
+                                ? await fetchAndOptimize(
+                                    bg.video.url,
+                                    `${destPath}/video`,
+                                    "video",
+                                  )
+                                : null,
+                            overlay:
+                              bg.theme.url !== ""
+                                ? await fetchAndOptimize(
+                                    bg.theme.url,
+                                    `${destPath}/overlay`,
+                                    "overlay",
+                                  )
+                                : null,
+                          };
+                        }),
+                    ),
+                  );
 
-        const backgroundData: LocaleBackgroundAsset[] = await Promise.all(
-          gameData.backgrounds.map(
-            async (background): Promise<LocaleBackgroundAsset> => {
-              const currentBgData: LocaleBackgroundAsset = {
-                image: await fetchAndOptimize(
-                  background.background.url,
-                  `${destPath}/image`,
-                  "image",
-                  crypto.randomUUID(),
-                ),
-                video:
-                  background.video.url !== ""
-                    ? await fetchAndOptimize(
-                        background.video.url,
-                        `${destPath}/video`,
-                        "video",
-                        crypto.randomUUID(),
-                      )
-                    : null,
-                overlay:
-                  background.theme.url !== ""
-                    ? await fetchAndOptimize(
-                        background.theme.url,
-                        `${destPath}/overlay`,
-                        "overlay",
-                        crypto.randomUUID(),
-                      )
-                    : null,
-              };
-              return currentBgData;
-            },
-          ),
-        );
-        res[game] ??= {} as AedesAssets[Games];
-        res[game][locale] = backgroundData;
-      }
-    }),
+                  res[gameCode] ??= {} as AedesAssets[Games];
+                  res[gameCode][locale] = bgData;
+                }),
+            ),
+          );
+        }),
+    ),
   );
 
-  const iconResponseGlobal = (await (
-    await fetch(ICONS_SCRAPE_ENDPOINT)
-  ).json()) as EndpointIconAssetData;
-  const iconResponseChina = (await (
-    await fetch(CN_ICONS_SCRAPE_ENDPOINT)
-  ).json()) as EndpointIconAssetData;
+  // Icons are hosted on their own endpoints
+  const iconResGlobal = (
+    (await (await fetch(ICONS_SCRAPE_ENDPOINT)).json()) as EndpointIconAssetData
+  ).data.games.slice(0, 6);
+  const iconResCn = (
+    (await (
+      await fetch(CN_ICONS_SCRAPE_ENDPOINT)
+    ).json()) as EndpointIconAssetData
+  ).data.games.slice(0, 6);
+
   // Set Icon Data
+  // iconResGlobal and iconResCn should be of identical length
+  await Promise.all(
+    GAMES.map(async (_game, index) =>
+      iconLimit(async () => {
+        const glbGameData = iconResGlobal[index];
+        const cnGameData = iconResCn[index];
 
-  for (let i = 0; i < GAMES.length; i++) {
-    const gameDataGlb = iconResponseGlobal.data.games[i];
-    const gameDataCn = iconResponseChina.data.games[i];
+        const gameCode = glbGameData?.biz.replaceAll(idSeparator, "") as Games;
 
-    if (!gameDataGlb || !gameDataCn) {
-      continue;
-    }
-    const game = gameDataGlb.biz.split("_")[0] as Games;
-    const iconDest = `./static/${game}/icon`;
+        if (!glbGameData) {
+          console.error(
+            `Global icon/shortcut data for ${gameCode} does not exist. Skipping all icon/shortcut data for this game code`,
+          );
+          return;
+        }
+        if (!cnGameData) {
+          console.error(
+            `Chinese icon/shortcut data for ${gameCode} does not exist. Skipping all icon/shortcut data for this game code`,
+          );
+          return;
+        }
 
-    res[game].icon = await fetchAndOptimize(
-      gameDataGlb.display.icon.url,
-      iconDest,
-      "icon",
-      crypto.randomUUID(),
-    );
-    res[game].icon_cn = await fetchAndOptimize(
-      gameDataCn.display.icon.url,
-      iconDest,
-      "icon",
-      crypto.randomUUID(),
-    );
-    res[game].shortcut = await fetchAndOptimize(
-      gameDataGlb.display.shortcut.url,
-      iconDest,
-      "icon",
-      crypto.randomUUID(),
-    );
-    res[game].shortcut_cn = await fetchAndOptimize(
-      gameDataCn.display.shortcut.url,
-      iconDest,
-      "icon",
-      crypto.randomUUID(),
-    );
-  }
+        const iconDest = `./static/${gameCode}/icon`;
+        await Promise.all(
+          (["icon", "shortcut"] as const).map(async (asset) => {
+            res[gameCode][asset] = await fetchAndOptimize(
+              glbGameData.display[asset].url,
+              iconDest,
+              "icon",
+            );
+            res[gameCode][`${asset}_cn`] = await fetchAndOptimize(
+              cnGameData?.display[asset].url,
+              iconDest,
+              "icon",
+            );
+          }),
+        );
+      }),
+    ),
+  );
 
   writeFileSync("./static/launcher-assets.json", JSON.stringify(res, null, 2));
 };
