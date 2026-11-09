@@ -68,8 +68,14 @@ export const fetchAndOptimize = async (
       break;
     }
     case "icon": {
-      // Desktop shortcut files do not need to be optimized
-      copyFileSync(downloadPath, optimizedPath);
+      if (ext === "ico") {
+        // Desktop shortcut files do not need to be optimized
+        copyFileSync(downloadPath, optimizedPath);
+      } else {
+        await execAsync(
+          `magick "${downloadPath}[0]" -strip -quality 85 "${optimizedPath}"`,
+        );
+      }
       break;
     }
     default: {
