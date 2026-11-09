@@ -20,8 +20,6 @@ import { regenerateComponentData } from "./components.ts";
       "libjxl was not found on your system path. Please install libjxl and ensure that it is on your system path to run the Aedes asset optimiser.",
     );
   }
-
-  console.log("Creating optimized asset/component data files");
   await regenerateAssetData();
 
   console.log("Assets/Asset Data Generated. Generating component data");
