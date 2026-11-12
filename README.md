@@ -27,7 +27,7 @@ The Aedes API is still a work in progress!
 
 ## Legal
 
-The Elysiae project is *not* the copyright holder for the assets provided through the endpoint. Assets are obtained through legal web scraping and are additionally re-distributions of widely available public material.
+The Elysiae project is _not_ the copyright holder for the assets provided through the endpoint. Assets are obtained through legal web scraping and are additionally re-distributions of widely available public material.
 
 Components re-distributed by Aedes are done so under their respective binary redistribution terms.
 
