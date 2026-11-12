@@ -6,8 +6,8 @@ import { promisify } from "node:util";
 export const execAsync = promisify(exec);
 
 export const optimiseProgress = new cliProgress.SingleBar({
-  format: `Optimising Files... ${ansiColors.whiteBright("{bar}")} {value}/{total} ({percentage}% Complete)`,
-  barCompleteChar: "\u2588",
-  barIncompleteChar: "\u0020",
-  hideCursor: true,
+	format: `Optimising Files... ${ansiColors.whiteBright("{bar}")} {value}/{total} ({percentage}% Complete)`,
+	barCompleteChar: "\u2588",
+	barIncompleteChar: "\u0020",
+	hideCursor: true,
 });
