@@ -21,13 +21,20 @@ Unifying optimized assets and components into one custom endpoint results in a s
 - Apply compression to reduce file size
 - Convert to png if the image was originally a webp image
 
+## Requirements
+
+To run Aedes, you must be able to run the asset optimiser script. This requires the following libraries:
+- FFMpeg 
+- ImageMagick, built with support for the JXL format
+- LibJXL
+
 ## Aedes API
 
 The Aedes API is still a work in progress!
 
 ## Legal
 
-The Elysiae project is *not* the copyright holder for the assets provided through the endpoint. Assets are obtained through legal web scraping and are additionally re-distributions of widely available public material.
+The Elysiae project is _not_ the copyright holder for the assets provided through the endpoint. Assets are obtained through legal web scraping and are additionally re-distributions of widely available public material.
 
 Components re-distributed by Aedes are done so under their respective binary redistribution terms.
 

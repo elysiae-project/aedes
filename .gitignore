@@ -26,4 +26,6 @@ logs/
 
 
 # Cached assets not to be added to github
-static
+static/*
+# Except for favicon
+!static/favicon.ico 
