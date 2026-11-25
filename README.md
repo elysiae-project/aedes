@@ -21,6 +21,13 @@ Unifying optimized assets and components into one custom endpoint results in a s
 - Apply compression to reduce file size
 - Convert to png if the image was originally a webp image
 
+## Requirements
+
+To run Aedes, you must be able to run the asset optimiser script. This requires:
+- FFMpeg 
+- ImageMagick, built with support for the JXL format
+- LibJXL
+
 ## Aedes API
 
 The Aedes API is still a work in progress!
