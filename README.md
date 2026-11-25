@@ -23,7 +23,7 @@ Unifying optimized assets and components into one custom endpoint results in a s
 
 ## Requirements
 
-To run Aedes, you must be able to run the asset optimiser script. This requires:
+To run Aedes, you must be able to run the asset optimiser script. This requires the following libraries:
 - FFMpeg 
 - ImageMagick, built with support for the JXL format
 - LibJXL
