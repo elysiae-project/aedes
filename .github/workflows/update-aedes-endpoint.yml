@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo add-apt-repository universe
           sudo apt update
-          sudo apt install ffmpeg
+          sudo apt install ffmpeg imagemagick libjxl-dev libjxl-tools
       - name: Install Project Deps
         run: |
           npm i -g corepack
